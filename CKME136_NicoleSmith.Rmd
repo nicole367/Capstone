@@ -1,0 +1,112 @@
+---
+title: "CKME 136 - Mount Rainier Climbing Dataset"
+author: "Nicole Smith"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+
+
+
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+
+```{r}
+#first, load the dataset
+rainier<-read.csv("C:/Users/nicol/OneDrive/Desktop/rainier.csv")
+summary(rainier)
+
+```
+
+
+```{r}
+#remove rows with more than 4 nas.
+nrow(rainier)
+
+keep<-rowSums(is.na(rainier)) <4
+rainierclean<-rainier[keep, ]
+
+nrow(rainierclean)
+
+#count how many nas remain
+sum(is.na(rainierclean))
+
+table(is.na(rainierclean))
+
+sum(is.na(rainierclean$Solar_Radiation))
+
+
+#now remove all remaining nas
+rainierclean<- rainierclean[complete.cases(rainierclean), ]
+
+nrow(rainierclean)
+
+#now we need to remove any rows where the success percentage is greater than 1, since that is not logical.
+
+rainier.clean<-rainierclean[(rainierclean$Success_Percentage<=1), ]
+
+nrow(rainier.clean)
+
+summary(rainier.clean)
+
+#now, we have a clean dataset.
+```
+
+
+
+```{r}
+#correlation
+
+
+cor(rainier.clean$Success_Percentage, rainier.clean$Battery_V)
+
+cor(rainier.clean$Success_Percentage, rainier.clean$Temp)
+
+cor(rainier.clean$Success_Percentage, rainier.clean$Humidity)
+
+cor(rainier.clean$Success_Percentage, rainier.clean$Wind_Speed)
+
+cor(rainier.clean$Success_Percentage, rainier.clean$Wind_Direction)
+
+#wind speed and temp have the highest effect on success rates, and battery voltage has the lest. for the linear model i will use temp, humidity, wind speed and wind direction.
+```
+
+
+```{r}
+#regression model
+regmodel<-lm(rainier.clean$Success_Percentage ~ rainier.clean$Temp + rainier.clean$Humidity + rainier.clean$Wind_Speed + rainier.clean$Wind_Direction)
+
+regmodel
+
+#success rate=0.2921594+0.0007881(humidity)-0.0002947(wind direction)+0.0053524(temperature)-0.0044135(wind speed)
+```
+
+
+```{r}
+#look at which route has the best probability of success
+agg1<-aggregate(Success_Percentage ~ Route, rainier.clean, mean)
+agg1
+
+agg2<-aggregate(Success_Percentage ~ Route, rainier.clean, sum)
+agg2
+
+#although the tahoma cleaver has the highest average success percentage, of 100%, there is only 1 attempt, so we do not have enough evidence to conclude that this route has the highest success percentage.
+```
+
+
+
+```{r}
+#export to excel for sql analysis
+#write.xlsx(rainier.clean, "C:/Users/nicol/OneDrive/Desktop/rainierclean.xlsx")
+```
+
